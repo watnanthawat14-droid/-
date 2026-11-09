@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ระบบค่าบริการทำบัญชีและตรวจสอบบัญชี</title>
+<style>
+:root{--ink:#1d1633;--muted:#6b6385;--line:#dcd5ee;--bg:#eee9f8;--card:#fff;--p:#3b1272;--p2:#5a2ba3;--p-soft:#efe9fb;--ok:#13795b;--ok-soft:#e2f5ee;--bad:#c0262d;--bad-soft:#fde8e9;--warn:#b7791f;--warn-soft:#fdf3dc;--yel:#f2b705}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:'Sarabun','IBM Plex Sans Thai','Noto Sans Thai',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.5}
+.hidden{display:none!important}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;border-radius:10px;padding:9px 16px;font-weight:600;background:var(--p-soft);color:var(--p)}
+button.primary{background:var(--p);color:#fff}button.primary:hover{background:var(--p2)}
+button.danger{background:var(--bad);color:#fff}button.warn{background:var(--yel);color:#3a2a00}
+button.sm{padding:5px 10px;font-size:13px;border-radius:8px}
+button:disabled{opacity:.45;cursor:default}
+input,select,textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:#fff;min-width:0}
+input:focus,select:focus,textarea:focus{outline:2px solid #b9a3e6;border-color:var(--p2)}
+input[type=checkbox]{width:auto;accent-color:var(--p);transform:scale(1.15)}
+label{font-size:13px;color:var(--muted);display:block;margin-bottom:3px}
+header{background:linear-gradient(120deg,#1f0b3f,#3b1272);color:#fff;padding:14px 24px;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+header h1{margin:0;font-size:19px}header small{opacity:.75}
+.who{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:13px}
+.who select{width:auto;background:#ffffff1f;color:#fff;border-color:#ffffff40}.who select option{color:#000}
+.who button{background:#ffffff26;color:#fff}
+main{max-width:1280px;margin:0 auto;padding:18px 16px 60px}
+.tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.tabs button{background:#fff;color:var(--muted)}.tabs button.on{background:var(--p);color:#fff}
+.card{background:var(--card);border-radius:16px;padding:18px;box-shadow:0 1px 3px #3b127214;margin-bottom:16px}
+.card h2,.card h3{margin:0 0 10px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:14px}
+.stat{background:#fff;border-radius:14px;padding:12px 16px;box-shadow:0 1px 3px #3b127214}
+.stat span{font-size:12.5px;color:var(--muted)}.stat b{display:block;font-size:21px;margin-top:2px}
+.stat.ok b{color:var(--ok)}.stat.bad b{color:var(--bad)}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px}
+.bar>div{flex:1 1 150px;min-width:130px}.bar>div.fix{flex:0 0 auto}
+.tw{overflow:auto;border:1px solid var(--line);border-radius:12px;max-height:70vh}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:8px 10px;border-bottom:1px solid #ece7f6;text-align:left;vertical-align:middle;white-space:nowrap}
+th{background:var(--p-soft);position:sticky;top:0;z-index:1;font-weight:600;font-size:13px}
+td.n,th.n{text-align:right}td.c,th.c{text-align:center}
+tr:hover td{background:#faf8ff}
+td.name{white-space:normal;min-width:190px}
+a.lnk{color:var(--p);cursor:pointer;font-weight:600;text-decoration:none}a.lnk:hover{text-decoration:underline}
+.tag{display:inline-block;padding:1px 9px;border-radius:99px;font-size:12px;background:var(--p-soft);color:var(--p)}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}.tag.bad{background:var(--bad-soft);color:var(--bad)}.tag.ok{background:var(--ok-soft);color:var(--ok)}
+.tfoot td{font-weight:700;background:var(--p-soft);position:sticky;bottom:0}
+.muted{color:var(--muted)}
+.back{position:fixed;inset:0;background:#1d163399;display:flex;align-items:center;justify-content:center;padding:14px;z-index:50}
+.box{background:#fff;border-radius:18px;padding:22px;width:100%;max-width:560px;max-height:94vh;overflow:auto;box-shadow:0 20px 60px #0004}
+.box.wide{max-width:900px}.box h3{margin:0 0 12px;color:var(--p)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 12px}
+.span2{grid-column:1/-1}
+.opts{display:flex;flex-wrap:wrap;gap:6px 16px;padding:8px 0}.svc{gap:8px}.svc label{border:1px solid var(--line);border-radius:10px;padding:7px 12px;background:#faf8ff}.svc label:has(input:checked){background:var(--p-soft);border-color:var(--p2)}.svc em{font-style:normal;font-weight:700;color:var(--p);margin-left:2px}
+.opts label{display:flex;gap:6px;align-items:center;color:var(--ink);font-size:14px;margin:0;cursor:pointer}
+.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;flex-wrap:wrap}
+.err{color:var(--bad);font-size:13.5px;min-height:18px;margin-top:6px}
+.prev{background:var(--p-soft);border-radius:12px;padding:10px 14px;font-size:14px}
+.prev div{display:flex;justify-content:space-between;gap:12px}.prev .t{font-weight:700}.prev .bb{border-bottom:1px solid var(--line);margin-bottom:4px;padding-bottom:4px}.prev .g{border-top:1px solid var(--line);margin-top:4px;padding-top:4px}
+.toast{position:fixed;left:50%;top:22px;transform:translateX(-50%);background:var(--ok);color:#fff;padding:10px 20px;border-radius:12px;z-index:90;box-shadow:0 8px 30px #0003}
+.toast.bad{background:var(--bad)}
+#loading{position:fixed;inset:0;background:#ffffffb8;display:flex;align-items:center;justify-content:center;z-index:99;font-weight:600;color:var(--p);gap:12px}
+.spin{width:26px;height:26px;border:3px solid var(--line);border-top-color:var(--p);border-radius:50%;animation:sp .8s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;background:linear-gradient(135deg,#1f0b3f,#4b1d94)}
+.login .box{max-width:400px}.login h1{margin:0 0 4px;font-size:20px;color:var(--p)}
+.sub{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}.sub button{background:#fff;border:1px solid var(--line)}.sub button.on{background:var(--p);color:#fff;border-color:var(--p)}
+.rt input{padding:5px 7px;min-width:78px;font-size:13.5px}.rt td,.rt th{padding:4px 6px}
+.hint{font-size:13px;color:var(--muted);margin:4px 0 10px}
+.bars{display:flex;height:14px;border-radius:7px;overflow:hidden;background:#ece7f6;margin:6px 0}.bars i{display:block;background:var(--ok)}.bars i.q{background:var(--yel)}
+@media(max-width:720px){.grid2,.grid3{grid-template-columns:1fr}header{padding:12px 14px}}
+@media print{header,.tabs,.bar,button{display:none!important}body{background:#fff}.card{box-shadow:none}}
+</style>
+</head>
+<body>
+<div id="loginView" class="login"><div class="box">
+  <h1>ระบบค่าบริการทำบัญชีและตรวจสอบบัญชี</h1><p class="muted" style="margin:0 0 14px">เข้าสู่ระบบด้วยอีเมลและรหัสผ่านที่ผู้ดูแลระบบกำหนดให้</p>
+  <label for="lgEmail">อีเมล</label><input id="lgEmail" type="email" autocomplete="username" style="margin-bottom:10px">
+  <label for="lgPass">รหัสผ่าน</label><input id="lgPass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+  <div id="lgErr" class="err" role="alert"></div>
+  <button id="lgBtn" class="primary" style="width:100%;margin-top:8px" onclick="doLogin()">เข้าสู่ระบบ</button>
+</div></div>
+
+<div id="appView" class="hidden">
+<header>
+  <div><h1>ระบบค่าบริการทำบัญชีและตรวจสอบบัญชี</h1><small id="subTitle"></small></div>
+  <div class="who"><span id="userInfo"></span><label style="margin:0;color:#fff">ปี พ.ศ. <select id="yearSel" onchange="onYear()"></select></label><button onclick="doLogout()">ออกจากระบบ</button></div>
+</header>
+<main>
+  <div class="tabs" id="tabs">
+    <button data-t="clients" class="on" onclick="showTab('clients')">ลูกค้าและค่าบริการ</button>
+    <button data-t="report" onclick="showTab('report')">สรุปรายงาน</button>
+    <button data-t="settings" id="tabSettings" class="hidden" onclick="showTab('settings')">ตั้งค่า</button>
+  </div>
+
+  <section id="tab_clients">
+    <div class="cards" id="stats"></div>
+    <div class="card">
+      <div class="bar">
+        <div><label>ค้นหา</label><input id="fSearch" placeholder="ชื่อ / เลขทะเบียน / กิจการ" oninput="renderClients()"></div>
+        <div><label>ประเภท</label><select id="fType" onchange="renderClients()"><option value="">ทั้งหมด</option><option>บจก.</option><option>หจก.</option></select></div>
+        <div><label>ผู้ทำบัญชี</label><select id="fAcc" onchange="renderClients()"></select></div>
+        <div><label>ผู้สอบ</label><select id="fAud" onchange="renderClients()"></select></div>
+        <div><label>สถานะ</label><select id="fStat" onchange="renderClients()">
+          <option value="">ทั้งหมด</option><option value="noq">ยังไม่เสนอราคา</option><option value="unpaid">เสนอราคาแล้ว ยังไม่เก็บเงิน</option><option value="paid">เก็บเงินแล้ว</option><option value="aud">ยังไม่จ่ายผู้สอบ</option></select></div>
+        <div class="fix"><button class="primary" id="btnAdd" onclick="openClient()">+ เพิ่มลูกค้า</button></div>
+        <div class="fix"><button onclick="exportCsv()">Export CSV</button></div>
+      </div>
+      <div class="tw"><table><thead><tr>
+        <th class="c">#</th><th>ชื่อลูกค้า</th><th>ประเภท</th><th>ผู้ทำบัญชี</th><th class="n">ค่าทำบัญชี</th><th>ผู้สอบ</th><th class="n">ค่าสอบ (เก็บ)</th><th class="n">รวมเรียกเก็บ</th>
+        <th class="c">เสนอราคา</th><th class="c">ลูกค้าจ่าย</th><th class="c">จ่ายผู้สอบ</th><th class="c">จัดการ</th></tr></thead>
+        <tbody id="cBody"></tbody><tfoot id="cFoot"></tfoot></table></div>
+      <p class="hint">คลิกชื่อลูกค้าเพื่อดูรายละเอียดการคำนวณ · ติ๊กสถานะได้ทันที (ผู้ใช้สิทธิ์ดูอย่างเดียวติ๊กไม่ได้)</p>
+    </div>
+  </section>
+
+  <section id="tab_report" class="hidden"></section>
+
+  <section id="tab_settings" class="hidden">
+    <div class="sub" id="subTabs">
+      <button data-s="acct" class="on" onclick="showSub('acct')">ตารางค่าทำบัญชี</button>
+      <button data-s="audit" onclick="showSub('audit')">ตารางค่าสอบ</button>
+      <button data-s="accs" onclick="showSub('accs')">ผู้ทำบัญชี</button>
+      <button data-s="auds" onclick="showSub('auds')">ผู้สอบ</button>
+      <button data-s="users" onclick="showSub('users')">ผู้ใช้งาน</button>
+      <button data-s="year" onclick="showSub('year')">คัดลอกข้อมูลข้ามปี</button>
+    </div>
+    <div class="card" id="setBody"></div>
+  </section>
+</main>
+</div>
+
+<div id="clientModal" class="back hidden"><div class="box wide">
+  <h3 id="cmTitle">เพิ่มลูกค้า</h3>
+  <form onsubmit="saveClient(event)" id="cmForm">
+  <input type="hidden" id="cId">
+  <div class="grid2">
+    <div class="span2"><label>ชื่อลูกค้า (เช่น บจก. ตัวอย่าง)</label><input id="cName" required maxlength="200" oninput="autoType();preview()"></div>
+    <div><label>ประเภท</label><select id="cType" onchange="fillAud();preview()"><option value="">— เลือก —</option><option>บจก.</option><option>หจก.</option></select></div>
+    <div><label>เลขทะเบียนนิติบุคคล</label><input id="cTax" maxlength="20" inputmode="numeric"></div>
+    <div class="span2"><label>ลักษณะกิจการ</label><input id="cBiz" maxlength="200"></div>
+    <div><label>ปี พ.ศ.</label><input id="cYear" type="number" min="2500" max="2700" required></div>
+    <div><label>จำนวนเดือนที่ทำบัญชี (1–12)</label><input id="cMonths" type="number" min="1" max="12" value="12" oninput="preview()"></div>
+    <div><label>รายได้</label><select id="cRevKind" onchange="revKind();preview()"><option value="num">ระบุจำนวนเงิน</option><option value="งบเปล่า">งบเปล่า</option><option value="มีแต่ค่าใช้จ่าย">มีแต่ค่าใช้จ่าย</option></select></div>
+    <div><label>จำนวนรายได้ (บาท)</label><input id="cRev" type="number" min="0" step="0.01" oninput="preview()"></div>
+    <div><label>ทุนจดทะเบียน (บาท) — ใช้ตรวจเกณฑ์ผู้สอบ TA</label><input id="cCap" type="number" min="0" step="any" oninput="preview()"></div>
+    <div><label>สินทรัพย์รวม (บาท) — ใช้ตรวจเกณฑ์ผู้สอบ TA</label><input id="cAst" type="number" min="0" step="any" oninput="preview()"></div>
+    <div class="span2"><label>บริการเสริม — ติ๊กเพื่อบวกเข้าค่าทำบัญชี (ดูราคาในสรุปด้านล่าง)</label><div class="opts svc">
+      <label><input type="checkbox" id="oVat" onchange="preview()"><span>VAT</span></label><label><input type="checkbox" id="oSs" onchange="preview()"><span>ปกส.</span></label>
+      <label><input type="checkbox" id="oStock" onchange="preview()"><span>Stock</span></label><label><input type="checkbox" id="oConsult" onchange="preview()"><span>ที่ปรึกษา</span></label>
+      <label><input type="checkbox" id="oDoc" onchange="preview()"><span>ปริมาณเอกสาร</span></label><label><input type="checkbox" id="oDiff" onchange="preview()"><span>ความยาก</span></label></div>
+      </div>
+    <div><label>ผู้ทำบัญชี</label><select id="cAcc"></select></div>
+    <div><label>ผู้สอบ (CPA ตรวจได้ทุกประเภท · TA เฉพาะ หจก. รายเล็ก)</label><select id="cAud" onchange="preview()"></select></div>
+    <div><label>ปรับค่าทำบัญชี (+/-)</label><input id="cAdjA" type="number" step="0.01" value="0" oninput="preview()"></div>
+    <div><label>ปรับค่าสอบ (+/-)</label><input id="cAdjU" type="number" step="0.01" value="0" oninput="preview()"></div>
+    <div class="span2"><label>หมายเหตุ</label><input id="cNote" maxlength="300"></div>
+  </div>
+  <div class="prev" id="cPrev" style="margin-top:12px"></div>
+  <div id="cErr" class="err" role="alert"></div>
+  <div class="actions"><button type="button" onclick="closeM('clientModal')">ยกเลิก</button><button class="primary" type="submit">บันทึก</button></div>
+  </form>
+</div></div>
+
+<div id="detailModal" class="back hidden"><div class="box"><h3 id="dTitle"></h3><div id="dBody"></div><div class="actions"><button onclick="closeM('detailModal')">ปิด</button></div></div></div>
+<div id="userModal" class="back hidden"><div class="box"><h3 id="uTitle">เพิ่มผู้ใช้งาน</h3>
+  <form onsubmit="saveUser(event)"><input type="hidden" id="uOrig"><div class="grid2">
+  <div class="span2"><label>อีเมลเข้าระบบ</label><input id="uEmail" type="email" required></div>
+  <div class="span2"><label>ชื่อ-นามสกุล</label><input id="uName" required></div>
+  <div><label>สิทธิ์</label><select id="uRole"><option value="admin">Admin (ทุกอย่าง)</option><option value="staff">Staff (จัดการลูกค้า/สถานะ)</option><option value="viewer">Viewer (ดูอย่างเดียว)</option></select></div>
+  <div><label>สถานะ</label><select id="uActive"><option value="true">เปิดใช้งาน</option><option value="false">ปิดใช้งาน</option></select></div>
+  <div class="span2"><label>รหัสผ่าน (อย่างน้อย 12 ตัวอักษร)</label><input id="uPass" type="password" autocomplete="new-password" maxlength="200"></div></div>
+  <div id="uErr" class="err" role="alert"></div>
+  <div class="actions"><button type="button" onclick="closeM('userModal')">ยกเลิก</button><button class="primary" type="submit">บันทึก</button></div></form></div></div>
+<div id="cfmModal" class="back hidden" style="z-index:80"><div class="box" style="max-width:400px;text-align:center"><p id="cfmText" style="white-space:pre-line;margin:6px 0 18px"></p><div class="actions" style="justify-content:center"><button id="cfmNo">ยกเลิก</button><button class="danger" id="cfmYes">ยืนยัน</button></div></div></div>
+<div id="loading" class="hidden"><div class="spin"></div><span id="loadingText">กำลังดำเนินการ…</span></div>
+<script>
+// ใช้แทน google.script.run ของ Apps Script: ส่งคำสั่งไป /api/rpc
+(function(){
+  function make(ok,no){
+    return new Proxy({},{get:function(_,k){
+      if(k==='withSuccessHandler')return function(f){return make(f,no);};
+      if(k==='withFailureHandler')return function(f){return make(ok,f);};
+      return function(){
+        var args=Array.prototype.slice.call(arguments);
+        fetch('/api/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fn:k,args:args})})
+          .then(function(res){return res.json().catch(function(){return {error:'เซิร์ฟเวอร์ตอบกลับไม่ถูกต้อง'};}).then(function(j){if(!res.ok||j.error)throw new Error(j.error||'เกิดข้อผิดพลาด');return j.result;});})
+          .then(function(v){if(ok)ok(v);},function(e){if(no)no(e);});
+      };
+    }});
+  }
+  window.google={script:{get run(){return make(null,null);}}};
+})();
+</script>
+<script>
+// ---- สูตรคำนวณค่าบริการ (ใช้ตัวเดียวกันทั้งฝั่งเซิร์ฟเวอร์และหน้าเว็บ) ----
+// rates = {acct:[{to,std,vat,ss,stock,consult,doc,diff}], audit:[{to,hjkPay,hjkCharge,bjkPay,bjkCharge}], auditors:[{name,hjkPay,hjkCharge,bjkPay,bjkCharge}]}
+// แถวแรกของ acct/audit คือ "งบเปล่า" (to='งบเปล่า'); แถวที่เหลือเรียงตามช่วงรายได้ ใช้แถวแรกที่ N <= to
+function num_(v){var n=Number(v);return isFinite(n)?n:0;}
+function band_(list,n){for(var i=0;i<list.length;i++){var t=list[i].to;if(t==='งบเปล่า'||t===''||t==null)continue;if(n<=num_(t))return list[i];}return null;}
+// เงื่อนไขผู้สอบ: CPA ตรวจได้ทุกประเภท / TA (ผู้สอบภาษีอากร) ตรวจได้เฉพาะ หจก. ขนาดเล็ก (รายได้ไม่เกิน 30 ล้านบาท)
+var TA_MAX_REVENUE=30000000,TA_MAX_ASSETS=30000000,TA_MAX_CAPITAL=5000000;
+function isTA(name){return /^TA[-\s]/i.test(String(name||'').trim());}
+function auditorIssue(c,N){
+  if(!c.auditor||!isTA(c.auditor))return '';
+  if(c.type==='บจก.')return 'ผู้สอบ TA ตรวจสอบได้เฉพาะ หจก. (บจก. ต้องใช้ผู้สอบ CPA)';
+  if(c.type==='หจก.'){
+    var m=[];
+    if(num_(c.capital)>TA_MAX_CAPITAL)m.push('ทุนจดทะเบียนเกิน 5 ล้านบาท');
+    if(num_(c.assets)>TA_MAX_ASSETS)m.push('สินทรัพย์รวมเกิน 30 ล้านบาท');
+    if(N>TA_MAX_REVENUE)m.push('รายได้เกิน 30 ล้านบาท');
+    if(m.length)return 'เกินเกณฑ์ผู้สอบ TA: '+m.join(', ')+' (ควรใช้ผู้สอบ CPA)';
+  }
+  return '';
+}
+function calcFees(c,rates){
+  var r={ok:true,warn:''},rev=c.revenue,textRev=(rev==='งบเปล่า'||rev==='มีแต่ค่าใช้จ่าย');
+  var months=num_(c.months);
+  r.N=(textRev||!months)?0:Math.round(num_(rev)/months*12*100)/100;
+  var A=rates.acct||[],U=rates.audit||[],b=band_(A,r.N);
+  r.P=0;
+  if(rev==='งบเปล่า'){r.P=A.length&&A[0].to==='งบเปล่า'?num_(A[0].std):0;}
+  else if(b){r.P=num_(b.std);}else{r.ok=false;r.warn='ไม่พบช่วงรายได้ในตารางค่าทำบัญชี';}
+  r.opt={vat:c.vat&&b?num_(b.vat):0,ss:c.ss&&b?num_(b.ss):0,stock:c.stock&&b?num_(b.stock):0,consult:c.consult&&b?num_(b.consult):0,doc:c.doc&&b?num_(b.doc):0,diff:c.diff&&b?num_(b.diff):0};
+  r.adjA=num_(c.adjAcct);
+  r.X=r.P+r.opt.vat+r.opt.ss+r.opt.stock+r.opt.consult+r.opt.doc+r.opt.diff+r.adjA;
+  var ub=band_(U,r.N),t=String(c.type||'').trim(),au=null;
+  (rates.auditors||[]).forEach(function(a){if(a.name===c.auditor)au=a;});
+  r.Z=0;r.AC=0;r.AA=0;r.AD=0;
+  if(t==='หจก.'||t==='บจก.'){
+    if(ub){r.Z=num_(t==='หจก.'?ub.hjkPay:ub.bjkPay);r.AC=num_(t==='หจก.'?ub.hjkCharge:ub.bjkCharge);}
+    else{r.ok=false;r.warn=r.warn||'ไม่พบช่วงรายได้ในตารางค่าสอบ';}
+    if(au){r.AA=num_(t==='หจก.'?au.hjkPay:au.bjkPay);r.AD=num_(t==='หจก.'?au.hjkCharge:au.bjkCharge);}
+  }
+  r.AB=r.Z+r.AA;r.adjU=num_(c.adjAudit);r.AF=r.AC+r.AD+r.adjU;
+  r.total=r.X+r.AF;r.margin=r.AF-r.AB;
+  r.issue=auditorIssue(c,r.N);
+  return r;
+}
+var D=null,TOKEN=null,YEAR=0,ED={},USERS=[],SUB='acct',TOKEN_KEY='feeSessionToken';
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function fmt(n){n=Number(n)||0;return n.toLocaleString('en-US',{maximumFractionDigits:2});}
+function isAdmin(){return D&&D.user.role==='admin';}
+function canEdit(){return D&&(D.user.role==='admin'||D.user.role==='staff');}
+var LOADING={login:'กำลังเข้าสู่ระบบ…',getData:'กำลังโหลดข้อมูล…',saveClient:'กำลังบันทึก…',deleteClient:'กำลังลบ…',copyYear:'กำลังคัดลอก…',adminSaveRates:'กำลังบันทึก…',adminSaveAccountants:'กำลังบันทึก…',adminSaveAuditors:'กำลังบันทึก…',adminSaveUser:'กำลังบันทึกและตั้งรหัสผ่าน…',adminDeleteUser:'กำลังลบ…',adminListUsers:'กำลังโหลดผู้ใช้งาน…'};
+var busy=0;
+function callServer(fn){
+  var args=Array.prototype.slice.call(arguments,1);
+  busy++;$('loadingText').textContent=LOADING[fn]||'กำลังดำเนินการ…';$('loading').classList.remove('hidden');
+  return new Promise(function(ok,fail){
+    var run=google.script.run.withSuccessHandler(function(r){done();ok(r);}).withFailureHandler(function(e){done();fail(new Error((e&&e.message)||String(e)));});
+    run[fn].apply(run,args);
+  });
+  function done(){busy=Math.max(0,busy-1);if(!busy)$('loading').classList.add('hidden');}
+}
+function toast(msg,bad){var t=document.createElement('div');t.className='toast'+(bad?' bad':'');t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.remove();},bad?4000:2200);}
+function openM(id){$(id).classList.remove('hidden');}
+function closeM(id){$(id).classList.add('hidden');}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){['clientModal','detailModal','userModal'].forEach(closeM);}});
+function confirmBox(text){return new Promise(function(res){$('cfmText').textContent=text;openM('cfmModal');
+  function end(v){closeM('cfmModal');$('cfmYes').onclick=null;$('cfmNo').onclick=null;res(v);}
+  $('cfmYes').onclick=function(){end(true);};$('cfmNo').onclick=function(){end(false);};});}
+function sessionExpired(e){return /Session|เข้าสู่ระบบใหม่|หมดอายุ/i.test(e.message||'');}
+function fail(e){if(sessionExpired(e)){showLogin('Session หมดอายุ กรุณาเข้าสู่ระบบใหม่');return;}toast(e.message,true);}
+
+// ---------- เข้าสู่ระบบ ----------
+function showLogin(msg){TOKEN=null;D=null;try{sessionStorage.removeItem(TOKEN_KEY);}catch(e){}
+  $('appView').classList.add('hidden');$('loginView').classList.remove('hidden');$('lgPass').value='';$('lgErr').textContent=msg||'';}
+async function doLogin(){
+  var em=$('lgEmail').value.trim(),pw=$('lgPass').value;$('lgErr').textContent='';
+  if(!em||!pw){$('lgErr').textContent='กรุณากรอกอีเมลและรหัสผ่าน';return;}
+  $('lgBtn').disabled=true;
+  try{var r=await callServer('login',em,pw);TOKEN=r.token;try{sessionStorage.setItem(TOKEN_KEY,TOKEN);}catch(e){}$('lgPass').value='';if(r.data){r.data.user={email:r.email,role:r.role};await loadAll(true,r.data);}else await loadAll(true);}
+  catch(e){$('lgErr').textContent=e.message||'เข้าสู่ระบบไม่สำเร็จ';}
+  finally{$('lgBtn').disabled=false;}
+}
+async function doLogout(){var t=TOKEN;showLogin('');try{google.script.run.logout(t);}catch(e){}}
+async function loadAll(first,pre){
+  try{
+    D=pre||await callServer('getData',TOKEN);
+    $('loginView').classList.add('hidden');$('appView').classList.remove('hidden');
+    $('userInfo').textContent=D.user.email+' · '+({admin:'ผู้ดูแลระบบ',staff:'เจ้าหน้าที่',viewer:'ดูอย่างเดียว'}[D.user.role]||D.user.role);
+    $('tabSettings').classList.toggle('hidden',!isAdmin());
+    $('btnAdd').classList.toggle('hidden',!canEdit());
+    if(first||!YEAR)initYears();
+    fillFilters();renderAll();
+  }catch(e){if(first&&!sessionExpired(e))$('lgErr').textContent=e.message;fail(e);}
+}
+function initYears(){
+  var cur=new Date().getFullYear()+543,set={};D.clients.forEach(function(c){if(c.year)set[c.year]=1;});set[cur]=1;
+  var ys=Object.keys(set).map(Number).sort(function(a,b){return b-a;});
+  var sel=$('yearSel');sel.innerHTML=ys.map(function(y){return '<option>'+y+'</option>';}).join('');
+  YEAR=set[cur]&&D.clients.some(function(c){return c.year===cur;})?cur:(ys.find(function(y){return D.clients.some(function(c){return c.year===y;});})||cur);
+  sel.value=String(YEAR);
+}
+function refreshYears(){var keep=YEAR;initYears();if([].some.call($('yearSel').options,function(o){return Number(o.value)===keep;})){YEAR=keep;$('yearSel').value=String(keep);}}
+function onYear(){YEAR=Number($('yearSel').value);renderAll();}
+function showTab(t){['clients','report','settings'].forEach(function(x){$('tab_'+x).classList.toggle('hidden',x!==t);});
+  [].forEach.call($('tabs').children,function(b){b.classList.toggle('on',b.dataset.t===t);});
+  if(t==='report')renderReport();if(t==='settings')showSub(SUB);}
+function renderAll(){$('subTitle').textContent='ข้อมูลปี พ.ศ. '+YEAR;renderClients();if(!$('tab_report').classList.contains('hidden'))renderReport();}
+
+// ---------- รายการลูกค้า ----------
+function rowsOfYear(){return D.clients.filter(function(c){return c.year===YEAR;}).map(function(c){return {c:c,f:calcFees(c,D.rates)};});}
+function fillFilters(){
+  var a=$('fAcc'),u=$('fAud'),ka=a.value,ku=u.value;
+  a.innerHTML='<option value="">ทั้งหมด</option><option value="__none">— ยังไม่ระบุ —</option>'+D.accountants.map(function(n){return '<option>'+esc(n)+'</option>';}).join('');
+  u.innerHTML='<option value="">ทั้งหมด</option><option value="__none">— ยังไม่ระบุ —</option>'+D.rates.auditors.map(function(x){return '<option>'+esc(x.name)+'</option>';}).join('');
+  a.value=ka;u.value=ku;if(a.value!==ka)a.value='';if(u.value!==ku)u.value='';
+}
+function passFilter(r){
+  var c=r.c,q=$('fSearch').value.trim().toLowerCase(),t=$('fType').value,a=$('fAcc').value,u=$('fAud').value,s=$('fStat').value;
+  if(q&&(c.name+' '+c.taxId+' '+c.business).toLowerCase().indexOf(q)<0)return false;
+  if(t&&c.type!==t)return false;
+  if(a&&(a==='__none'?c.accountant:c.accountant!==a))return false;
+  if(u&&(u==='__none'?c.auditor:c.auditor!==u))return false;
+  if(s==='noq'&&c.quoted)return false;
+  if(s==='unpaid'&&!(c.quoted&&!c.paid))return false;
+  if(s==='paid'&&!c.paid)return false;
+  if(s==='aud'&&!(c.auditor&&!c.auditorPaid))return false;
+  return true;
+}
+function renderClients(){
+  if(!D)return;
+  var all=rowsOfYear(),rows=all.filter(passFilter);
+  var sum=function(list,fn){return list.reduce(function(s,r){return s+fn(r);},0);};
+  var paidAmt=sum(all,function(r){return r.c.paid?r.f.total:0;}),totAmt=sum(all,function(r){return r.f.total;});
+  var owe=sum(all,function(r){return r.c.auditor&&!r.c.auditorPaid?r.f.AB:0;});
+  $('stats').innerHTML=[['ลูกค้าทั้งหมด',all.length+' ราย',''],['ค่าทำบัญชีรวม',fmt(sum(all,function(r){return r.f.X;})),''],['ค่าสอบรวม (เก็บ)',fmt(sum(all,function(r){return r.f.AF;})),''],
+    ['เก็บเงินแล้ว',fmt(paidAmt),'ok'],['ค้างเก็บ',fmt(totAmt-paidAmt),(totAmt-paidAmt)>0?'bad':''],['ค้างจ่ายผู้สอบ',fmt(owe),'']]
+    .map(function(s){return '<div class="stat '+s[2]+'"><span>'+s[0]+'</span><b>'+s[1]+'</b></div>';}).join('');
+  var ed=canEdit(),h='';
+  rows.forEach(function(r,ri){var c=r.c,f=r.f,chk=function(k,v){return '<input type="checkbox" '+(v?'checked ':'')+(ed?'':'disabled ')+'onchange="toggleStatus(\''+esc(c.id)+'\',\''+k+'\',this)">';};
+    h+='<tr><td class="c muted">'+(ri+1)+'</td><td class="name"><a class="lnk" onclick="openDetail(\''+esc(c.id)+'\')">'+esc(c.name)+'</a>'+((f.ok&&!f.issue)?'':' <span class="tag bad" title="'+esc(f.warn||f.issue)+'">ตรวจสอบ</span>')+'<br><span class="muted" style="font-size:12.5px">'+esc(c.business)+'</span></td>'
+     +'<td><span class="tag">'+esc(c.type)+'</span></td><td>'+(c.accountant?esc(c.accountant):'<span class="muted">—</span>')+'</td><td class="n">'+fmt(f.X)+'</td>'
+     +'<td>'+(c.auditor?esc(c.auditor):'<span class="muted">—</span>')+'</td><td class="n">'+fmt(f.AF)+'</td><td class="n"><b>'+fmt(f.total)+'</b></td>'
+     +'<td class="c">'+chk('quoted',c.quoted)+'</td><td class="c">'+chk('paid',c.paid)+'</td><td class="c">'+chk('auditorPaid',c.auditorPaid)+'</td>'
+     +'<td class="c">'+(ed?'<button class="sm warn" onclick="openClient(\''+esc(c.id)+'\')">แก้ไข</button> ':'')+(isAdmin()?'<button class="sm danger" onclick="delClient(\''+esc(c.id)+'\')">ลบ</button>':'')+'</td></tr>';});
+  $('cBody').innerHTML=h||'<tr><td colspan="12" class="c muted" style="padding:28px">ไม่พบข้อมูลลูกค้าในปี '+YEAR+' ตามเงื่อนไขที่เลือก</td></tr>';
+  $('cFoot').innerHTML=rows.length?'<tr class="tfoot"><td></td><td>รวม '+rows.length+' ราย</td><td></td><td></td><td class="n">'+fmt(sum(rows,function(r){return r.f.X;}))+'</td><td></td><td class="n">'+fmt(sum(rows,function(r){return r.f.AF;}))+'</td><td class="n">'+fmt(sum(rows,function(r){return r.f.total;}))+'</td><td></td><td></td><td></td><td></td></tr>':'';
+}
+async function toggleStatus(id,key,el){
+  var c=D.clients.find(function(x){return x.id===id;});if(!c)return;var v=el.checked,old=c[key];c[key]=v;
+  try{await new Promise(function(ok,no){google.script.run.withSuccessHandler(ok).withFailureHandler(function(e){no(new Error(e.message||e));}).setClientStatus(id,key,v,TOKEN);});renderClients();if(!$('tab_report').classList.contains('hidden'))renderReport();}
+  catch(e){c[key]=old;el.checked=old;fail(e);}
+}
+async function delClient(id){
+  var c=D.clients.find(function(x){return x.id===id;});if(!c)return;
+  if(!await confirmBox('ยืนยันลบลูกค้า\n'+c.name+' (ปี '+c.year+') ?\n\nลบแล้วกู้คืนไม่ได้'))return;
+  try{var r=await callServer('deleteClient',id,TOKEN);applyData(r.data);toast(r.message);}catch(e){fail(e);}
+}
+function applyData(d){D.clients=d.clients;D.accountants=d.accountants;D.rates=d.rates;refreshYears();fillFilters();renderAll();}
+
+// ---------- รายละเอียด ----------
+function openDetail(id){
+  var c=D.clients.find(function(x){return x.id===id;});if(!c)return;var f=calcFees(c,D.rates);
+  $('dTitle').textContent=c.name;
+  var L=function(a,b,cls){return '<tr><td>'+a+'</td><td class="n'+(cls?' '+cls:'')+'">'+b+'</td></tr>';};
+  var o=f.opt,h='<p class="muted" style="margin:0 0 8px">'+esc(c.type)+' · เลขทะเบียน '+esc(c.taxId||'-')+' · '+esc(c.business||'')+'<br>ปี '+c.year+' · รายได้ '+(typeof c.revenue==='number'?fmt(c.revenue)+' ('+(c.months||'-')+' เดือน)':esc(c.revenue||'-'))+' · ประมาณการทั้งปี '+fmt(f.N)+'</p>';
+  h+='<table><tbody><tr><th colspan="2">ค่าทำบัญชี (เก็บจากลูกค้า) — ผู้ทำ: '+esc(c.accountant||'-')+'</th></tr>'+L('ค่ามาตรฐาน',fmt(f.P))+
+    (c.vat?L('VAT',fmt(o.vat)):'')+(c.ss?L('ปกส.',fmt(o.ss)):'')+(c.stock?L('Stock',fmt(o.stock)):'')+(c.consult?L('ที่ปรึกษา',fmt(o.consult)):'')+(c.doc?L('ปริมาณเอกสาร',fmt(o.doc)):'')+(c.diff?L('ความยาก',fmt(o.diff)):'')+
+    (f.adjA?L('ปรับ (+/-)',fmt(f.adjA)):'')+L('<b>รวมค่าทำบัญชี</b>','<b>'+fmt(f.X)+'</b>')+
+    '<tr><th colspan="2">การตรวจสอบบัญชี — ผู้สอบ: '+esc(c.auditor||'-')+'</th></tr>'+L('เก็บจากลูกค้า (มาตรฐาน)',fmt(f.AC))+(f.AD?L('เพิ่มตามผู้สอบ',fmt(f.AD)):'')+(f.adjU?L('ปรับ (+/-)',fmt(f.adjU)):'')+L('<b>รวมค่าสอบที่เก็บ</b>','<b>'+fmt(f.AF)+'</b>')+
+    L('จ่ายผู้สอบ (มาตรฐาน'+(f.AA?' + เพิ่ม':'')+')',fmt(f.AB))+L('ส่วนต่างค่าสอบ (เก็บ − จ่าย)',fmt(f.margin),f.margin<0?'bad':'')+
+    '<tr class="tfoot"><td>รวมเรียกเก็บลูกค้าทั้งหมด</td><td class="n">'+fmt(f.total)+'</td></tr></tbody></table>';
+  if(!f.ok)h+='<p class="err">⚠ '+esc(f.warn)+'</p>';
+  h+='<p style="margin:10px 0 0">สถานะ: '+[['เสนอราคา',c.quoted],['ลูกค้าจ่ายแล้ว',c.paid],['จ่ายผู้สอบแล้ว',c.auditorPaid]].map(function(s){return '<span class="tag '+(s[1]?'ok':'')+'">'+(s[1]?'✓ ':'')+s[0]+'</span>';}).join(' ')+'</p>';
+  if(c.note)h+='<p class="muted">หมายเหตุ: '+esc(c.note)+'</p>';
+  $('dBody').innerHTML=h;openM('detailModal');
+}
+
+// ---------- ฟอร์มลูกค้า ----------
+function fillSelect(id,list,val,none){var s=$(id);s.innerHTML='<option value="">'+none+'</option>'+list.map(function(n){return '<option>'+esc(n)+'</option>';}).join('');
+  if(val&&list.indexOf(val)<0)s.innerHTML+='<option>'+esc(val)+'</option>';s.value=val||'';}
+function openClient(id){
+  if(!canEdit())return;
+  var c=id?D.clients.find(function(x){return x.id===id;}):null;
+  $('cmTitle').textContent=c?'แก้ไขลูกค้า':'เพิ่มลูกค้า';$('cErr').textContent='';
+  $('cId').value=c?c.id:'';$('cName').value=c?c.name:'';$('cType').value=c?c.type:'';$('cTax').value=c?c.taxId:'';$('cBiz').value=c?c.business:'';
+  $('cYear').value=c?c.year:YEAR;$('cMonths').value=c?c.months:12;
+  var rv=c?c.revenue:'';$('cRevKind').value=(rv==='งบเปล่า'||rv==='มีแต่ค่าใช้จ่าย')?rv:'num';$('cRev').value=typeof rv==='number'?rv:'';revKind();
+  [['oVat','vat'],['oSs','ss'],['oStock','stock'],['oConsult','consult'],['oDoc','doc'],['oDiff','diff']].forEach(function(p){$(p[0]).checked=c?!!c[p[1]]:false;});
+  fillSelect('cAcc',D.accountants,c?c.accountant:'','— ยังไม่ระบุ —');fillAud(c?c.auditor:'',true);
+  $('cAdjA').value=c?c.adjAcct:0;$('cAdjU').value=c?c.adjAudit:0;$('cCap').value=c&&c.capital!==''?c.capital:'';$('cAst').value=c&&c.assets!==''?c.assets:'';$('cNote').value=c?c.note:'';
+  preview();openM('clientModal');setTimeout(function(){$('cName').focus();},50);
+}
+function revKind(){var k=$('cRevKind').value;$('cRev').disabled=k!=='num';if(k!=='num')$('cRev').value='';}
+function fillAud(keepVal,keepAny){
+  var t=$('cType').value,cur=keepVal!==undefined?keepVal:$('cAud').value;
+  var names=D.rates.auditors.map(function(x){return x.name;}).filter(function(n){return !(t==='บจก.'&&isTA(n));});
+  if(keepAny&&cur&&names.indexOf(cur)<0)names.push(cur);
+  fillSelect('cAud',names,names.indexOf(cur)>=0?cur:'','— ยังไม่ระบุ —');
+}
+function autoType(){var n=$('cName').value.trim(),o=$('cType').value;if(n.indexOf('บจก.')===0)$('cType').value='บจก.';else if(n.indexOf('หจก.')===0)$('cType').value='หจก.';if($('cType').value!==o)fillAud();}
+function readClient(){
+  var k=$('cRevKind').value,rev=k==='num'?($('cRev').value===''?'':Number($('cRev').value)):k;
+  return {id:$('cId').value,name:$('cName').value,type:$('cType').value,taxId:$('cTax').value,business:$('cBiz').value,year:Number($('cYear').value),months:$('cMonths').value===''?'':Number($('cMonths').value),revenue:rev,
+    vat:$('oVat').checked,ss:$('oSs').checked,stock:$('oStock').checked,consult:$('oConsult').checked,doc:$('oDoc').checked,diff:$('oDiff').checked,
+    accountant:$('cAcc').value,auditor:$('cAud').value,adjAcct:Number($('cAdjA').value)||0,adjAudit:Number($('cAdjU').value)||0,note:$('cNote').value,capital:$('cCap').value===''?'':Number($('cCap').value),assets:$('cAst').value===''?'':Number($('cAst').value)};
+}
+function preview(){
+  var c=readClient(),f=calcFees(c,D.rates),L=function(a,b,t){return '<div'+(t?' class="t '+(t===1?'':t)+'"':'')+'><span>'+a+'</span><span>'+b+'</span></div>';};
+  var names=[['vat','VAT','pVat'],['ss','ปกส.','pSs'],['stock','Stock','pStock'],['consult','ที่ปรึกษา','pConsult'],['doc','ปริมาณเอกสาร','pDoc'],['diff','ความยาก','pDiff']];
+  var items=names.filter(function(n){return c[n[0]];}).map(function(n){return L('+ '+n[1],fmt(f.opt[n[0]]));}).join('');
+  $('cPrev').innerHTML='<div class="muted"><span>ประมาณการรายได้ทั้งปี</span><span>'+fmt(f.N)+'</span></div>'+
+    L('ค่าทำบัญชี (มาตรฐาน)',fmt(f.P))+items+(f.adjA?L('ปรับ (+/-)',fmt(f.adjA)):'')+L('รวมค่าทำบัญชี',fmt(f.X),'bb')+
+    L('ค่าสอบ (มาตรฐาน)'+(c.type?'':' (เลือกประเภทก่อน)'),fmt(f.AC))+(f.AD?L('+ ค่าเพิ่ม '+esc(c.auditor),fmt(f.AD)):'')+(f.adjU?L('ปรับค่าสอบ (+/-)',fmt(f.adjU)):'')+L('รวมค่าสอบที่เก็บ',fmt(f.AF),1)+L('รวมเรียกเก็บลูกค้า',fmt(f.total),'g')+(f.ok?'':'<div class="t" style="color:var(--bad)"><span>⚠ '+esc(f.warn)+'</span></div>')+(f.issue?'<div class="t" style="color:var(--bad)"><span>⚠ '+esc(f.issue)+'</span></div>':'')+((!f.issue&&isTA(c.auditor)&&c.type==='หจก.'&&(c.capital===''||c.assets===''))?'<div class="muted" style="font-size:13px;margin-top:4px">ℹ ผู้สอบ TA: กรอกทุนจดทะเบียนและสินทรัพย์รวมเพื่อตรวจเกณฑ์ (ทุน ≤ 5 ล้าน, สินทรัพย์และรายได้ ≤ 30 ล้านบาท)</div>':'');
+}
+async function saveClient(ev){
+  ev.preventDefault();$('cErr').textContent='';
+  try{var r=await callServer('saveClient',readClient(),TOKEN);applyData(r.data);closeM('clientModal');toast(r.message);}
+  catch(e){if(sessionExpired(e)){closeM('clientModal');fail(e);}else $('cErr').textContent=e.message;}
+}
+
+// ---------- สรุปรายงาน ----------
+function groupBy(rows,keyFn){var m={},order=[];rows.forEach(function(r){var k=keyFn(r);if(!(k in m)){m[k]=[];order.push(k);}m[k].push(r);});return order.map(function(k){return {k:k,rows:m[k]};});}
+function S(list,fn){return list.reduce(function(s,r){return s+fn(r);},0);}
+function tbl(head,body,foot){return '<div class="tw" style="max-height:none"><table><thead><tr>'+head.map(function(h,i){return '<th class="'+(i?'n':'')+'">'+h+'</th>';}).join('')+'</tr></thead><tbody>'+body+'</tbody>'+(foot?'<tfoot>'+foot+'</tfoot>':'')+'</table></div>';}
+function tr(cells,cls){return '<tr class="'+(cls||'')+'">'+cells.map(function(c,i){return '<td class="'+(i?'n':'')+'">'+c+'</td>';}).join('')+'</tr>';}
+function renderReport(){
+  if(!D)return;var all=rowsOfYear(),tot=S(all,function(r){return r.f.total;});
+  var paid=all.filter(function(r){return r.c.paid;}),quo=all.filter(function(r){return r.c.quoted&&!r.c.paid;}),noq=all.filter(function(r){return !r.c.quoted&&!r.c.paid;});
+  var pct=function(x){return tot?Math.round(x/tot*1000)/10:0;},aP=S(paid,function(r){return r.f.total;}),aQ=S(quo,function(r){return r.f.total;}),aN=S(noq,function(r){return r.f.total;});
+  var h='<div class="card"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><h2>สรุปค่าบริการ ปี พ.ศ. '+YEAR+'</h2><button onclick="window.print()">พิมพ์ / บันทึก PDF</button></div>'+
+   '<h3>สถานะการเรียกเก็บเงิน</h3><div class="bars"><i style="width:'+pct(aP)+'%"></i><i class="q" style="width:'+pct(aQ)+'%"></i></div>'+
+   tbl(['สถานะ','จำนวน (ราย)','ยอดเงิน','สัดส่วน'],tr(['<span class="tag ok">เก็บเงินแล้ว</span>',paid.length,fmt(aP),pct(aP)+'%'])+tr(['<span class="tag warn">เสนอราคาแล้ว รอเก็บเงิน</span>',quo.length,fmt(aQ),pct(aQ)+'%'])+tr(['<span class="tag">ยังไม่เสนอราคา</span>',noq.length,fmt(aN),pct(aN)+'%']),tr(['รวม',all.length,fmt(tot),'100%'],'tfoot'))+'</div>';
+  var ga=groupBy(all,function(r){return r.c.accountant||'— ยังไม่ระบุ —';}).sort(function(a,b){return b.rows.length-a.rows.length;});
+  h+='<div class="card"><h3>ตามผู้ทำบัญชี</h3>'+tbl(['ผู้ทำบัญชี','จำนวนลูกค้า','ค่าทำบัญชีรวม'],ga.map(function(g){return tr(['<a class="lnk" onclick="showAdj(\''+esc(g.k).replace(/'/g,"\\'")+'\')">'+esc(g.k)+'</a>',g.rows.length,fmt(S(g.rows,function(r){return r.f.X;}))]);}).join(''),tr(['รวม',all.length,fmt(S(all,function(r){return r.f.X;}))],'tfoot'))+'<p class="muted" style="margin:8px 0 0;font-size:13px">คลิกชื่อผู้ทำบัญชีเพื่อดูค่าบริการแยกตามบริษัท</p></div>';
+  var gu=groupBy(all.filter(function(r){return r.c.auditor;}),function(r){return r.c.auditor;}).sort(function(a,b){return b.rows.length-a.rows.length;});
+  var au=all.filter(function(r){return r.c.auditor;});
+  h+='<div class="card"><h3>ตามผู้สอบ (เฉพาะลูกค้าที่ระบุผู้สอบแล้ว)</h3>'+tbl(['ผู้สอบ','จำนวนลูกค้า','เก็บจากลูกค้า','จ่ายผู้สอบ','ส่วนต่าง','ค้างจ่ายผู้สอบ'],gu.map(function(g){return tr(['<a class="lnk" onclick="showAdjU(\''+esc(g.k).replace(/'/g,"\\'")+'\')">'+esc(g.k)+'</a>',g.rows.length,fmt(S(g.rows,function(r){return r.f.AF;})),fmt(S(g.rows,function(r){return r.f.AB;})),fmt(S(g.rows,function(r){return r.f.margin;})),fmt(S(g.rows,function(r){return r.c.auditorPaid?0:r.f.AB;}))]);}).join('')||'<tr><td colspan="6" class="c muted">ยังไม่ได้ระบุผู้สอบให้ลูกค้ารายใด</td></tr>',
+    tr(['รวม',au.length,fmt(S(au,function(r){return r.f.AF;})),fmt(S(au,function(r){return r.f.AB;})),fmt(S(au,function(r){return r.f.margin;})),fmt(S(au,function(r){return r.c.auditorPaid?0:r.f.AB;}))],'tfoot'))+'</div>';
+  var gt=groupBy(all,function(r){return r.c.type||'—';});
+  h+='<div class="card"><h3>ตามประเภทนิติบุคคล</h3>'+tbl(['ประเภท','จำนวน','ค่าทำบัญชี','ค่าสอบ (เก็บ)','รวม'],gt.map(function(g){return tr([esc(g.k),g.rows.length,fmt(S(g.rows,function(r){return r.f.X;})),fmt(S(g.rows,function(r){return r.f.AF;})),fmt(S(g.rows,function(r){return r.f.total;}))]);}).join(''),'')+'</div>';
+  var chk=[];all.forEach(function(r){var m=[];if(!r.f.ok)m.push(r.f.warn);if(r.f.issue)m.push(r.f.issue);if(r.c.revenue===''||r.c.revenue==null)m.push('ยังไม่ระบุรายได้');if(!r.c.months&&typeof r.c.revenue==='number')m.push('ยังไม่ระบุจำนวนเดือน');if(m.length)chk.push([r.c,m]);});
+  h+='<div class="card"><h3>รายการที่ควรตรวจสอบข้อมูล ('+chk.length+')</h3>'+(chk.length?'<div class="tw" style="max-height:none"><table><tbody>'+chk.map(function(x){return '<tr><td class="name"><a class="lnk" onclick="'+(canEdit()?'openClient':'openDetail')+'(\''+esc(x[0].id)+'\')">'+esc(x[0].name)+'</a></td><td style="white-space:normal">'+x[1].map(function(t){return '<span class="tag warn">'+esc(t)+'</span>';}).join(' ')+'</td></tr>';}).join('')+'</tbody></table></div>':'<p class="muted">ไม่พบรายการที่ต้องตรวจสอบ</p>')+'</div>';
+  $('tab_report').innerHTML=h;
+}
+
+function adjPopup_(title,list,cols){
+  $('dTitle').textContent=title;
+  var sg=function(v){return v?(v>0?'+':'')+fmt(v):'<span class="muted">—</span>';},cl=function(v){return v<0?'#b42318':(v>0?'#067647':'inherit');};
+  var h='';
+  if(!list.length)h='<p class="muted">ไม่มีลูกค้า</p>';
+  else{
+    var T=[0,0,0,0];
+    h='<div class="tw" style="max-height:none"><table><thead><tr><th>ลูกค้า</th><th class="n">'+cols[0]+'</th><th class="n">'+cols[1]+'</th><th class="n">ปรับ (+/-)</th><th class="n">เก็บจริง</th></tr></thead><tbody>'+
+    list.map(function(x){T[0]+=x[1];T[1]+=x[2];T[2]+=x[3];T[3]+=x[4];return '<tr><td class="name">'+esc(x[0])+'</td><td class="n">'+fmt(x[1])+'</td><td class="n">'+(x[2]?fmt(x[2]):'<span class="muted">—</span>')+'</td><td class="n" style="color:'+cl(x[3])+'">'+sg(x[3])+'</td><td class="n">'+fmt(x[4])+'</td></tr>';}).join('')+
+    '</tbody><tfoot><tr class="tfoot"><td>รวม '+list.length+' ราย</td><td class="n">'+fmt(T[0])+'</td><td class="n">'+fmt(T[1])+'</td><td class="n" style="color:'+cl(T[2])+'">'+sg(T[2])+'</td><td class="n">'+fmt(T[3])+'</td></tr></tfoot></table></div>';}
+  $('dBody').innerHTML=h;$('detailModal').classList.remove('hidden');
+}
+function showAdj(name){
+  var list=rowsOfYear().filter(function(r){return (r.c.accountant||'— ยังไม่ระบุ —')===name;}).map(function(r){var f=r.f;return [r.c.name,f.P,f.X-f.P-f.adjA,f.adjA,f.X];});
+  adjPopup_('ค่าทำบัญชี — '+name,list,['ค่ามาตรฐาน','บริการเสริม']);
+}
+function showAdjU(name){
+  var list=rowsOfYear().filter(function(r){return r.c.auditor===name;}).map(function(r){var f=r.f;return [r.c.name,f.AC,f.AD,f.adjU,f.AF];});
+  adjPopup_('ค่าสอบ — '+name,list,['ค่าสอบมาตรฐาน','ค่าเพิ่มผู้สอบ']);
+}
+// ---------- Export CSV ----------
+function csvCell(v){var t=String(v==null?'':v);if(/^[=+\-@\t\r]/.test(t))t="'"+t;return '"'+t.replace(/"/g,'""')+'"';}
+function exportCsv(){
+  var head=['ลำดับ','ชื่อลูกค้า','เลขทะเบียน','ประเภท','ลักษณะกิจการ','VAT','ปกส.','Stock','ที่ปรึกษา','ปริมาณเอกสาร','ความยาก','จำนวนเดือน','รายได้','ประมาณการทั้งปี','ทุนจดทะเบียน','สินทรัพย์รวม','ผู้ทำบัญชี','ค่าทำบัญชี','ผู้สอบ','จ่ายผู้สอบ','เก็บค่าสอบ','รวมเรียกเก็บ','เสนอราคา','ลูกค้าจ่ายแล้ว','จ่ายผู้สอบแล้ว','หมายเหตุ'];
+  var yn=function(b){return b?'ใช่':'';};
+  var rows=rowsOfYear().filter(passFilter).map(function(r){var c=r.c,f=r.f;return [c.seq,c.name,c.taxId,c.type,c.business,yn(c.vat),yn(c.ss),yn(c.stock),yn(c.consult),yn(c.doc),yn(c.diff),c.months,c.revenue,f.N,c.capital,c.assets,c.accountant,f.X,c.auditor,f.AB,f.AF,f.total,yn(c.quoted),yn(c.paid),yn(c.auditorPaid),c.note];});
+  var csv='﻿'+[head].concat(rows).map(function(r){return r.map(csvCell).join(',');}).join('\r\n');
+  var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='ค่าบริการ_ปี'+YEAR+'.csv';document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);
+}
+
+// ---------- ตั้งค่า ----------
+var ACCT_COLS=[['std','ค่ามาตรฐาน'],['vat','VAT'],['ss','ปกส.'],['stock','Stock'],['consult','ที่ปรึกษา'],['doc','ปริมาณเอกสาร'],['diff','ความยาก']];
+var AUD_COLS=[['hjkPay','หจก. จ่ายผู้สอบ'],['hjkCharge','หจก. เก็บ ล/ค'],['bjkPay','บจก. จ่ายผู้สอบ'],['bjkCharge','บจก. เก็บ ล/ค']];
+function showSub(s){
+  SUB=s;[].forEach.call($('subTabs').children,function(b){b.classList.toggle('on',b.dataset.s===s);});
+  if(s==='acct'||s==='audit'){ED[s]=JSON.parse(JSON.stringify(D.rates[s]));renderRates(s);}
+  else if(s==='accs'){ED.accs=D.accountants.slice();renderAccs();}
+  else if(s==='auds'){ED.auds=JSON.parse(JSON.stringify(D.rates.auditors));renderAuds();}
+  else if(s==='users'){loadUsers();}
+  else renderYear();
+}
+function renderRates(kind){
+  var cols=kind==='acct'?ACCT_COLS:AUD_COLS,rows=ED[kind],prev=null;
+  var h='<h3>'+(kind==='acct'?'ตารางค่าทำบัญชี (เก็บจากลูกค้า)':'ตารางค่าสอบ (จ่ายผู้สอบ / เก็บจากลูกค้า)')+'</h3><p class="hint">ใช้แถวแรกที่ "ประมาณการรายได้ทั้งปี" ไม่เกินค่าในช่อง "ถึง" · แถวแรกคือ "งบเปล่า" · เรียงจากน้อยไปมาก'+(kind==='acct'?' · ช่องตัวเลือก (VAT, ปกส. ฯลฯ) คือค่าที่บวกเพิ่มเมื่อติ๊กเลือก':'')+'<br><b>ตารางนี้ใช้กับทุกปี</b> การแก้ไขจะมีผลกับการคำนวณทุกรายทันที</p>';
+  h+='<div class="tw rt" style="max-height:60vh"><table><thead><tr><th>จาก</th><th>ถึง (บาท)</th>'+cols.map(function(c){return '<th>'+c[1]+'</th>';}).join('')+'<th></th></tr></thead><tbody>';
+  rows.forEach(function(r,i){var first=i===0;
+    h+='<tr><td class="muted">'+(first?'':fmt(prev===null?0:(i===1?0:Number(rows[i-1].to)+1)))+'</td><td>'+(first?'<b>งบเปล่า</b>':'<input type="number" min="0" value="'+esc(r.to)+'" oninput="setCell(\''+kind+'\','+i+',\'to\',this.value)">')+'</td>'+
+      cols.map(function(c){return '<td><input type="number" min="0" step="any" value="'+esc(r[c[0]])+'" oninput="setCell(\''+kind+'\','+i+',\''+c[0]+'\',this.value)"></td>';}).join('')+
+      '<td>'+(first?'':'<button class="sm danger" onclick="delRate(\''+kind+'\','+i+')">ลบ</button>')+'</td></tr>';prev=r.to;});
+  h+='</tbody></table></div><div class="actions" style="justify-content:space-between"><button onclick="addRate(\''+kind+'\')">+ เพิ่มช่วงรายได้</button><button class="primary" onclick="saveRates(\''+kind+'\')">บันทึกตาราง</button></div>';
+  $('setBody').innerHTML=h;
+}
+function setCell(kind,i,k,v){ED[kind][i][k]=v===''?0:Number(v);}
+function addRate(kind){var rows=ED[kind],last=rows[rows.length-1],n=JSON.parse(JSON.stringify(last));n.to=(Number(last.to)||0)+1000000;rows.push(n);renderRates(kind);}
+function delRate(kind,i){ED[kind].splice(i,1);renderRates(kind);}
+async function saveRates(kind){
+  var rows=ED[kind];for(var i=2;i<rows.length;i++){if(!(Number(rows[i].to)>Number(rows[i-1].to))){toast('ช่อง "ถึง" ต้องเรียงจากน้อยไปมาก (แถวที่ '+(i+1)+')',true);return;}}
+  try{var r=await callServer('adminSaveRates',kind,rows,TOKEN);applyData(r.data);toast(r.message);ED[kind]=JSON.parse(JSON.stringify(D.rates[kind]));renderRates(kind);}catch(e){fail(e);}
+}
+function renderAccs(){
+  var h='<h3>รายชื่อผู้ทำบัญชี</h3><p class="hint">ชื่อที่ใช้เลือกในฟอร์มลูกค้า (ถ้าเปลี่ยนชื่อ ลูกค้าเดิมที่เคยเลือกชื่อเก่าจะยังแสดงชื่อเดิม)</p><div style="display:grid;gap:8px;max-width:420px">';
+  ED.accs.forEach(function(n,i){h+='<div style="display:flex;gap:8px"><input value="'+esc(n)+'" oninput="ED.accs['+i+']=this.value"><button class="sm danger" onclick="ED.accs.splice('+i+',1);renderAccs()">ลบ</button></div>';});
+  h+='</div><div class="actions" style="justify-content:flex-start"><button onclick="ED.accs.push(\'\');renderAccs()">+ เพิ่มชื่อ</button><button class="primary" onclick="saveAccs()">บันทึกรายชื่อ</button></div>';$('setBody').innerHTML=h;
+}
+async function saveAccs(){try{var r=await callServer('adminSaveAccountants',ED.accs,TOKEN);applyData(r.data);toast(r.message);ED.accs=D.accountants.slice();renderAccs();}catch(e){fail(e);}}
+function renderAuds(){
+  var h='<h3>รายชื่อผู้สอบ และค่าเพิ่มรายบุคคล</h3><p class="hint">ค่าเพิ่ม (ถ้ามี) จะบวกเข้ากับค่าสอบมาตรฐานเมื่อเลือกผู้สอบคนนั้น แยกตามประเภท หจก./บจก. เว้นว่าง = ไม่มีค่าเพิ่ม</p><div class="tw rt" style="max-height:60vh"><table><thead><tr><th>ชื่อผู้สอบ</th>'+AUD_COLS.map(function(c){return '<th>'+c[1].replace('จ่ายผู้สอบ','+จ่ายผู้สอบ').replace('เก็บ ล/ค','+เก็บ ล/ค')+'</th>';}).join('')+'<th></th></tr></thead><tbody>';
+  ED.auds.forEach(function(a,i){h+='<tr><td><input style="min-width:170px" value="'+esc(a.name)+'" oninput="ED.auds['+i+'].name=this.value"></td>'+AUD_COLS.map(function(c){return '<td><input type="number" min="0" value="'+(a[c[0]]?esc(a[c[0]]):'')+'" oninput="ED.auds['+i+'].'+c[0]+'=this.value"></td>';}).join('')+'<td><button class="sm danger" onclick="ED.auds.splice('+i+',1);renderAuds()">ลบ</button></td></tr>';});
+  h+='</tbody></table></div><div class="actions" style="justify-content:space-between"><button onclick="ED.auds.push({name:\'\',hjkPay:\'\',hjkCharge:\'\',bjkPay:\'\',bjkCharge:\'\'});renderAuds()">+ เพิ่มผู้สอบ</button><button class="primary" onclick="saveAuds()">บันทึกรายชื่อ</button></div>';$('setBody').innerHTML=h;
+}
+async function saveAuds(){try{var r=await callServer('adminSaveAuditors',ED.auds,TOKEN);applyData(r.data);toast(r.message);ED.auds=JSON.parse(JSON.stringify(D.rates.auditors));renderAuds();}catch(e){fail(e);}}
+async function loadUsers(){try{var r=await callServer('adminListUsers',TOKEN);USERS=r.users;renderUsers();}catch(e){fail(e);}}
+function renderUsers(){
+  var roles={admin:'Admin',staff:'Staff',viewer:'Viewer'};
+  var h='<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h3 style="margin:0">ผู้ใช้งานระบบ</h3><button class="primary" onclick="openUser()">+ เพิ่มผู้ใช้งาน</button></div><div class="tw" style="margin-top:10px;max-height:none"><table><thead><tr><th>ชื่อ</th><th>อีเมล</th><th>สิทธิ์</th><th>สถานะ</th><th class="c">จัดการ</th></tr></thead><tbody>';
+  USERS.forEach(function(u,i){h+='<tr><td>'+esc(u.name||'—')+'</td><td>'+esc(u.email)+'</td><td><span class="tag">'+esc(roles[u.role]||u.role)+'</span></td><td>'+(u.active?'<span class="tag ok">เปิดใช้งาน</span>':'<span class="tag bad">ปิด</span>')+'</td><td class="c"><button class="sm warn" onclick="openUser('+i+')">แก้ไข</button> <button class="sm danger" onclick="delUser('+i+')">ลบ</button></td></tr>';});
+  $('setBody').innerHTML=h+'</tbody></table></div>';
+}
+function openUser(i){
+  var u=i==null?null:USERS[i];$('uTitle').textContent=u?'แก้ไขผู้ใช้งาน':'เพิ่มผู้ใช้งาน';$('uErr').textContent='';
+  $('uOrig').value=u?u.email:'';$('uEmail').value=u?u.email:'';$('uName').value=u?u.name:'';$('uRole').value=u?u.role:'staff';$('uActive').value=u?String(u.active):'true';$('uPass').value='';
+  $('uPass').placeholder=u?'เว้นว่างไว้ถ้าไม่เปลี่ยนรหัสผ่าน':'อย่างน้อย 12 ตัวอักษร';openM('userModal');
+}
+async function saveUser(ev){
+  ev.preventDefault();$('uErr').textContent='';var pw=$('uPass').value,orig=$('uOrig').value;
+  if(!orig&&!pw){$('uErr').textContent='กรุณากรอกรหัสผ่านสำหรับบัญชีใหม่ (อย่างน้อย 12 ตัวอักษร)';return;}
+  if(pw&&pw.length<12){$('uErr').textContent='รหัสผ่านต้องมีอย่างน้อย 12 ตัวอักษร';return;}
+  try{var r=await callServer('adminSaveUser',{originalEmail:orig,email:$('uEmail').value,name:$('uName').value,role:$('uRole').value,active:$('uActive').value==='true',password:pw},TOKEN);USERS=r.users;closeM('userModal');renderUsers();toast(r.message);}
+  catch(e){if(sessionExpired(e)){closeM('userModal');fail(e);}else $('uErr').textContent=e.message;}
+}
+async function delUser(i){var u=USERS[i];if(!await confirmBox('ยืนยันลบบัญชี\n'+u.email+' ?'))return;
+  try{var r=await callServer('adminDeleteUser',u.email,TOKEN);USERS=r.users;renderUsers();toast(r.message);}catch(e){fail(e);}}
+function renderYear(){
+  var ys=[...new Set(D.clients.map(function(c){return c.year;}))].sort(function(a,b){return b-a;});
+  $('setBody').innerHTML='<h3>คัดลอกข้อมูลลูกค้าไปปีใหม่</h3><p class="hint">คัดลอกรายชื่อลูกค้าและตัวเลือกทั้งหมดจากปีหนึ่งไปอีกปี โดยล้างสถานะ (เสนอราคา/จ่ายแล้ว) และค่าปรับ (+/-) ให้เป็นศูนย์ · ปลายทางต้องยังไม่มีข้อมูล</p><div class="grid3" style="max-width:560px"><div><label>จากปี พ.ศ.</label><select id="cyFrom">'+ys.map(function(y){return '<option'+(y===YEAR?' selected':'')+'>'+y+'</option>';}).join('')+'</select></div><div><label>ไปปี พ.ศ.</label><input id="cyTo" type="number" min="2500" max="2700" value="'+((ys[0]||YEAR)+1)+'"></div><div style="align-self:end"><button class="primary" onclick="doCopyYear()">คัดลอก</button></div></div>';
+}
+async function doCopyYear(){
+  var f=Number($('cyFrom').value),t=Number($('cyTo').value);
+  if(!await confirmBox('คัดลอกลูกค้าจากปี '+f+' ไปปี '+t+' ?'))return;
+  try{var r=await callServer('copyYear',f,t,TOKEN);applyData(r.data);YEAR=t;$('yearSel').value=String(t);renderAll();toast(r.message);renderYear();}catch(e){fail(e);}
+}
+
+(function(){try{TOKEN=sessionStorage.getItem(TOKEN_KEY);}catch(e){}if(TOKEN)loadAll(true);})();
+</script>
+</body></html>

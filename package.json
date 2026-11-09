@@ -1,0 +1,7 @@
+{
+  "name": "accounting-fee-system",
+  "version": "1.0.0",
+  "private": true,
+  "engines": { "node": ">=18" },
+  "dependencies": { "googleapis": "^144.0.0" }
+}
